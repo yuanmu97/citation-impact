@@ -7,7 +7,6 @@ import { writeTextFile } from '../../services/fsAccess';
 interface Props {
   author: AuthorInfo;
   targets: TargetPaperWithCitings[];
-  pdfDir: string;
   dirHandle: FileSystemDirectoryHandle | null;
   onBack: () => void;
 }
@@ -34,7 +33,7 @@ function CopyBlock({ label, text }: { label: string; text: string }) {
   );
 }
 
-export default function ConfigExport({ author, targets, pdfDir, dirHandle, onBack }: Props) {
+export default function ConfigExport({ author, targets, dirHandle, onBack }: Props) {
   const [copied, setCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [saveError, setSaveError] = useState('');

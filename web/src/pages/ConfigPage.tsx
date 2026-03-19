@@ -25,8 +25,6 @@ export default function ConfigPage() {
   const [papers, setPapers] = useState<PaperItem[]>([]);
   const [selectedPapers, setSelectedPapers] = useState<SelectedPaper[]>([]);
   const [targetsWithCitings, setTargetsWithCitings] = useState<TargetPaperWithCitings[]>([]);
-  const [pdfDir, setPdfDir] = useState('');
-
   const handlePickDir = useCallback(async () => {
     try {
       const handle = await pickDirectory();
@@ -56,9 +54,8 @@ export default function ConfigPage() {
     setStep(3);
   }, []);
 
-  const handlePdfConfirmed = useCallback((updated: TargetPaperWithCitings[], dir: string) => {
+  const handlePdfConfirmed = useCallback((updated: TargetPaperWithCitings[], _dir: string) => {
     setTargetsWithCitings(updated);
-    setPdfDir(dir);
     setStep(4);
   }, []);
 
@@ -118,7 +115,6 @@ export default function ConfigPage() {
           <ConfigExport
             author={authorInfo}
             targets={targetsWithCitings}
-            pdfDir={pdfDir}
             dirHandle={dirHandle}
             onBack={() => setStep(3)}
           />

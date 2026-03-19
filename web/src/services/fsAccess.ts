@@ -4,11 +4,18 @@
  * Falls back gracefully when unsupported.
  */
 
+declare global {
+  interface Window {
+    showDirectoryPicker?: (options?: { mode?: string }) => Promise<FileSystemDirectoryHandle>;
+  }
+}
+
 export function isFileSystemAccessSupported(): boolean {
   return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 }
 
 export async function pickDirectory(): Promise<FileSystemDirectoryHandle> {
+  if (!window.showDirectoryPicker) throw new Error('File System Access API not supported');
   return await window.showDirectoryPicker({ mode: 'readwrite' });
 }
 

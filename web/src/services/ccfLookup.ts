@@ -6,13 +6,17 @@ interface CCFEntry {
   rank: string;
 }
 
+type VenueInfo = { fullname?: string; rank?: string; [k: string]: unknown };
+const data = ccfData as Record<string, Record<string, VenueInfo | string>>;
+
 const entries: CCFEntry[] = [];
 const abbrMap = new Map<string, string>();
 const fullnameMap = new Map<string, string>();
 
 for (const category of ['journals', 'conferences'] as const) {
-  const section = (ccfData as Record<string, Record<string, { fullname: string; rank: string }>>)[category] ?? {};
+  const section = data[category] ?? {};
   for (const [abbr, info] of Object.entries(section)) {
+    if (typeof info === 'string') continue;
     const rank = info.rank ?? '';
     const fullname = info.fullname ?? '';
     abbrMap.set(abbr.toLowerCase(), rank);
