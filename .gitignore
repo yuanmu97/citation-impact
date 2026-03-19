@@ -1,0 +1,30 @@
+# Dependencies
+web/node_modules/
+
+# Build output
+web/dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Test / runtime output
+test-run/
+citation_output/
+citation_pdfs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.cursor/
+.vscode/
+*.swp
+*.swo
+
+# Debug script (dev only)
+agent/scripts/debug_extraction.py
