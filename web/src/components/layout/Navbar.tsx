@@ -1,12 +1,21 @@
+import { Link, useLocation } from 'react-router-dom';
+
 export default function Navbar() {
+  const { pathname } = useLocation();
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2 font-bold text-lg text-primary-700">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg text-primary-700">
           <span className="text-2xl">📊</span>
           Citation&nbsp;Impact
-        </a>
+        </Link>
         <div className="flex items-center gap-6 text-sm font-medium">
+          <Link
+            to="/config"
+            className={`transition ${pathname === '/config' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'}`}
+          >
+            Config Tool
+          </Link>
           <a
             href="https://github.com/yuanmu97/citation-impact"
             target="_blank"

@@ -1,18 +1,20 @@
+import { Link } from 'react-router-dom';
+
 const steps = [
   {
     num: '1',
-    title: 'Clone & Start Config UI',
-    desc: 'Clone the repo, run "npm run dev" in the web/ folder, and open the local config tool in your browser.',
+    title: 'Configure',
+    desc: 'Use the Config Tool to search your papers, select citing papers, and set filter conditions.',
   },
   {
     num: '2',
-    title: 'Configure & Export',
-    desc: 'Search your profile, pick papers, set filters, and export config.yaml + PDF folders to your workspace.',
+    title: 'Export',
+    desc: 'Choose a local working directory. Config and PDF folders are saved directly to your machine.',
   },
   {
     num: '3',
     title: 'Run the Agent',
-    desc: 'Open the workspace in Cursor or Claude Code and let the agent analyze your citations automatically.',
+    desc: 'Open the workspace in Cursor or Claude Code and let the agent analyze your citations.',
   },
 ];
 
@@ -32,14 +34,24 @@ export default function QuickStart() {
             </div>
           ))}
         </div>
-        <a
-          href="https://github.com/yuanmu97/citation-impact#quick-start"
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          to="/config"
           className="inline-flex items-center gap-2 rounded-lg bg-primary-600 text-white px-6 py-3 font-semibold hover:bg-primary-700 transition"
         >
-          View Full Guide <span aria-hidden="true">&rarr;</span>
-        </a>
+          Open Config Tool <span aria-hidden="true">&rarr;</span>
+        </Link>
+        <p className="mt-4 text-xs text-gray-400">
+          Requires Chrome or Edge. For best performance,{' '}
+          <a
+            href="https://github.com/yuanmu97/citation-impact#quick-start"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-gray-600"
+          >
+            run locally
+          </a>{' '}
+          instead.
+        </p>
       </div>
     </section>
   );

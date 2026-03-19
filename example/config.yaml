@@ -1,0 +1,81 @@
+version: '2.0'
+researcher:
+  name: Mu Yuan (袁牧)
+  google_scholar_id: zzy5JCIAAAAJ
+  openalex_id: ''
+target_papers:
+  - openalex_id: W4386365397
+    title: 'Packetgame: Multi-stream packet gating for concurrent video inference at scale'
+    year: 2023
+    doi: 10.1145/3603269.3604825
+    citing_papers:
+      - openalex_id: W4413986970
+        title: 'Déjà Vu: Efficient Video-Language Query Engine with Learning-Based Inter-Frame Computation Reuse'
+        year: 2025
+        doi: 10.14778/3748191.3748195
+        venue: Proceedings of the VLDB Endowment
+        ccf_rank: B
+        authors: >-
+          Jinwoo Hwang, D. Kim, Sangyeop Lee, Yoonsung Kim, Guseul Heo, Hojoon Kim, Yunseok Jeong, Tadiwos Meaza,
+          Eunhyeok Park, Jeongseob Ahn, Jongse Park
+        pdf_source: local
+        pdf_folder: Déjà Vu Efficient Video-Language Query Engine with Learning-Based Inter-Frame Co
+      - openalex_id: W4408848651
+        title: Empower Vision Applications with LoRA LMM
+        year: 2025
+        doi: 10.1145/3689031.3717472
+        venue: ''
+        ccf_rank: ''
+        authors: >-
+          Liang Mi, Weijun Wang, Wutao Tu, Qingfeng He, Rui Kong, Xinyu Fang, Yazhu Dong, Yikang Zhang, Yuanchun Li,
+          Meng Li, Haipeng Dai, Guihai Chen, Yunxin Liu
+        pdf_source: local
+        pdf_folder: Empower Vision Applications with LoRA LMM
+      - openalex_id: W4408891492
+        title: 'Palantir: Towards Efficient Super Resolution for Ultra-high-definition Live Streaming'
+        year: 2025
+        doi: 10.1145/3712676.3714434
+        venue: ''
+        ccf_rank: ''
+        authors: Xinqi Jin, Zhui Zhu, Xikai Sun, Fan Dang, Jiangchuan Liu, Jingao Xu, Kebin Liu, Xinlei Chen, Yunhao Liu
+        pdf_source: local
+        pdf_folder: Palantir Towards Efficient Super Resolution for Ultra-high-definition Live Strea
+      - openalex_id: W4408280684
+        title: 'AMRE: Adaptive Multilevel Redundancy Elimination for Multimodal Mobile Inference'
+        year: 2025
+        doi: 10.1109/tmc.2025.3549422
+        venue: IEEE Transactions on Mobile Computing
+        ccf_rank: A
+        authors: Qixuan Cai, Rui Chu, Kaixuan Zhang, Xiulong Liu, Xinyu Tong, Xin Xie, Jian-Cheng Chen, Keqiu Li
+        pdf_source: local
+        pdf_folder: AMRE Adaptive Multilevel Redundancy Elimination for Multimodal Mobile Inference
+      - openalex_id: W4410225535
+        title: 'SDFMD: Spatial Domain Filtering for Accelerating Video Analysis'
+        year: 2025
+        doi: 10.1007/978-981-96-5318-8_30
+        venue: Lecture notes in electrical engineering
+        ccf_rank: B
+        authors: Hebin Sun, Wei Liu, Meizhao Liu, Yingcheng Gu, Fei Xia, Kai Liu, Yu Song, Huanyu Cheng, Tang Lei, Sheng Zhang
+        pdf_source: unknown
+        pdf_folder: SDFMD Spatial Domain Filtering for Accelerating Video Analysis
+      - openalex_id: W4400909524
+        title: Online Container Caching with Late-Warm for IoT Data Processing
+        year: 2024
+        doi: 10.1109/icde60146.2024.00127
+        venue: ''
+        ccf_rank: ''
+        authors: Guopeng Li, Haisheng Tan, Xuan Zhang, Chi Zhang, Ruiting Zhou, Zhenhua Han, Guoliang Chen
+        pdf_source: local
+        pdf_folder: Online Container Caching with Late-Warm for IoT Data Processing
+      - openalex_id: W4392968216
+        title: 'SplitStream: Distributed and workload-adaptive video analytics at the edge'
+        year: 2024
+        doi: 10.1016/j.jnca.2024.103866
+        venue: Journal of Network and Computer Applications
+        ccf_rank: C
+        authors: Yu Liang, Sheng Zhang, Jie Wu
+        pdf_source: unknown
+        pdf_folder: SplitStream Distributed and workload-adaptive video analytics at the edge
+options:
+  pdf_dir: .
+  output_dir: ./citation_output

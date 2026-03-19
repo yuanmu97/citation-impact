@@ -1,4 +1,5 @@
 """Generate a Markdown citation impact report from collected data."""
+from __future__ import annotations
 
 import json
 import logging

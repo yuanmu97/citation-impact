@@ -67,11 +67,11 @@ For each citing paper, fill in **three columns** in `<output_dir>/citation_repor
 
 | Sentiment | Chinese Label | Description |
 |-----------|--------------|-------------|
-| High praise | 高度评价 | Explicitly praises, builds upon, or highlights the contribution as significant/influential |
-| Neutral | 一般引用 | Standard reference for background, comparison, methodology, or related work |
+| High praise | 高度评价 | Explicitly praises, builds upon, or highlights the contribution as significant/influential. Also applies when the paper is cited as a "representative", "pioneering", or "foundational" work, or cited multiple times across different sections (Introduction + Related Work + Experiments, etc.), indicating the authors consider it an important reference in the field. |
+| Neutral | 一般引用 | Single standard reference for background, comparison, or related work listing — typically a one-time mention in a "[X], [Y], [Z]" list within Related Work |
 | Critical | 批评性引用 | Critiques, identifies limitations, proposes improvements, or disagrees |
 
-Consider the full context: look for words like "seminal", "groundbreaking", "builds upon" (praise), "proposed", "introduced", "similar to" (neutral), or "fails to", "limited", "outperforms" with the target as the weaker method (critical).
+Consider the full context: look for words like "seminal", "groundbreaking", "builds upon", "representative" (praise), "proposed", "introduced", "similar to" (neutral), or "fails to", "limited", "outperforms" with the target as the weaker method (critical). Also consider **citation frequency**: being cited 2+ times across different sections is a strong signal of high praise — it means the authors view the work as important enough to reference repeatedly.
 
 **分析说明 (reasoning)** — briefly explain the classification (e.g. which section, how the target paper is referenced, any praise or criticism).
 

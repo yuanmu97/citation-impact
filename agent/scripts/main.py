@@ -2,6 +2,7 @@
 
 Usage: python main.py --config path/to/config.yaml
 """
+from __future__ import annotations
 
 import argparse
 import asyncio

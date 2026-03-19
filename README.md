@@ -7,7 +7,7 @@
 ## How It Works
 
 ```
-┌─────────────┐     config.yaml      ┌─────────────┐     citation_report.md
+┌─────────────┐     config.yaml       ┌─────────────┐  citation_report.md
 │  Local Web  │  ──────────────────>  │  AI Agent   │  ──────────────────>  📊 Report
 │  Config UI  │  + citation_pdfs/     │  (Cursor /  │
 │  (browser)  │                       │ Claude Code)│
@@ -48,16 +48,19 @@ In the web UI:
 ### Step 3: Install the agent skill
 
 **Cursor:**
+
 ```bash
 git clone https://github.com/yuanmu97/citation-impact.git ~/.cursor/skills/citation-impact
 ```
 
 **Claude Code:**
+
 ```bash
 git clone https://github.com/yuanmu97/citation-impact.git ~/.claude/skills/citation-impact
 ```
 
 > If you already cloned in Step 1, you can symlink instead:
+>
 > ```bash
 > ln -s /path/to/citation-impact ~/.cursor/skills/citation-impact
 > ```
@@ -71,72 +74,49 @@ Analyze my citation impact using config.yaml
 ```
 
 The agent will:
+
 - Install Python dependencies (`aiohttp`, `PyMuPDF`, `pyyaml`)
 - Run the extraction pipeline (download OA PDFs, extract text, find citation contexts)
 - Read each PDF's first pages to identify author institutions
 - Classify each citation as 高度评价 / 一般引用 / 批评性引用
 - Produce a complete `citation_output/citation_report.md`
 
+## Example
+
+A complete working example is included in the [`example/`](example/) folder:
+
+- [`example/config.yaml`](example/config.yaml) — input configuration
+- [`example/citation_report.md`](example/citation_report.md) — generated report
+
+Below is a condensed view of the report for [PacketGame (ACM SIGCOMM 2023)](https://doi.org/10.1145/3603269.3604825):
+
+> **研究者**: Mu Yuan (袁牧) &nbsp;|&nbsp; **分析论文数**: 1 篇 &nbsp;|&nbsp; **符合条件被引**: 5 次
+
+| # | 他引论文                                            | 机构                    | 发表出处 | 年份 | 评级 | 评价类型           | 分析说明                                        |
+| - | --------------------------------------------------- | ----------------------- | -------- | ---- | ---- | ------------------ | ----------------------------------------------- |
+| 1 | Déjà Vu: Efficient Video-Language Query Engine... | Korea University        | VLDB     | 2025 | B    | 一般引用           | 视频推理领域相关工作引用                        |
+| 2 | Empower Vision Applications with LoRA LMM           | Nanjing Univ.; Tsinghua | EuroSys  | 2025 | A    | **高度评价** | 3 个章节中 3 次引用，作为实时视频分析代表性工作 |
+| 3 | Palantir: Towards Efficient Super Resolution...     | Tsinghua; Simon Fraser  | MMSys    | 2025 | A    | 一般引用           | DAG Construction 中作为背景事实引用             |
+| 4 | AMRE: Adaptive Multilevel Redundancy Elimination... | Tianjin Univ.           | IEEE TMC | 2025 | A    | 一般引用           | Related Work 中以列举方式归类为输入区域优化工作 |
+| 5 | Online Container Caching with Late-Warm...          | USTC; MSRA              | ICDE     | 2024 | A    | 一般引用           | Introduction 中作为 IoT 推理任务示例            |
+
+> 高度评价 1 (20%) · 一般引用 4 (80%) · 批评性引用 0
+
+The agent extracts full citation contexts from PDFs, identifies author institutions, and classifies each citation with reasoning. See the [full report](example/citation_report.md) for all details.
+
 ## Config Format (v2.0)
 
-The web tool generates v2.0 configs with pre-selected citing papers:
+The web tool generates v2.0 configs. See [`example/config.yaml`](example/config.yaml) for a real example.
 
-```yaml
-version: '2.0'
-researcher:
-  name: "Jane Doe"
-  google_scholar_id: "ABCDEFG"
-  openalex_id: "A5012345678"
-target_papers:
-  - openalex_id: W1234567890
-    title: "My Great Paper"
-    year: 2023
-    doi: 10.xxxx/xxxxx
-    citing_papers:
-      - openalex_id: W9876543210
-        title: "Citing Paper"
-        year: 2025
-        doi: 10.yyyy/yyyyy
-        venue: "ICML"
-        ccf_rank: A
-        authors: "Alice, Bob"
-        pdf_source: oa
-        pdf_folder: "Citing Paper"
-options:
-  pdf_dir: "."
-  output_dir: "./citation_output"
-```
-
-| Field | Description |
-|---|---|
-| `version` | Config schema version (`"2.0"`) |
-| `researcher` | Author identity — name, Google Scholar ID, OpenAlex ID |
-| `target_papers` | Papers to analyze, each with a pre-built `citing_papers` list |
+| Field                          | Description                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `version`                    | Config schema version (`"2.0"`)                                                |
+| `researcher`                 | Author identity — name, Google Scholar ID, OpenAlex ID                          |
+| `target_papers`              | Papers to analyze, each with a pre-built `citing_papers` list                  |
 | `citing_papers[].pdf_source` | `"oa"` (auto-download), `"local"` (user placed), or `"unknown"` (try both) |
-| `citing_papers[].pdf_folder` | Subfolder under `citation_pdfs/` — place your PDF here |
-| `options.pdf_dir` | Must be `"."` — `citation_pdfs/` lives at workspace root |
-| `options.output_dir` | Output directory for results |
-
-## Report Sample
-
-```markdown
-# 学术论文被引情况报告
-**研究者**: Jane Doe | **生成日期**: 2026-03-20
-
-## 论文 1: My Great Paper
-- **发表于**: NeurIPS 2023
-- **总被引次数**: 42 | **符合条件**: 15 次
-
-| # | 他引论文 | 作者 | 机构 | 发表出处 | 年份 | 评级 | 引用原文 | 评价类型 | 分析说明 |
-|---|---------|------|------|---------|------|------|---------|---------|---------|
-| 1 | Deep Analysis of X | A. Smith | MIT | ICML | 2024 | A | "...builds upon the seminal work..." | 高度评价 | Introduction 中明确称为 seminal work 并基于其方法扩展 |
-| 2 | A Survey on Y | C. Wang | Tsinghua | CSUR | 2025 | A | "...proposed a method for..." | 一般引用 | Related Work 中作为同类方法列举 |
-
-### 总结
-- 高度评价: 5 (33.3%)
-- 一般引用: 8 (53.3%)
-- 批评性引用: 2 (13.3%)
-```
+| `citing_papers[].pdf_folder` | Subfolder under `citation_pdfs/` — place your PDF here                        |
+| `options.pdf_dir`            | Must be `"."` — `citation_pdfs/` lives at workspace root                    |
+| `options.output_dir`         | Output directory for results                                                     |
 
 ## Requirements
 

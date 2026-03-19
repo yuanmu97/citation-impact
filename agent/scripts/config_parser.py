@@ -1,4 +1,5 @@
 """Parse and validate YAML configuration files for citation impact analysis."""
+from __future__ import annotations
 
 from pathlib import Path
 

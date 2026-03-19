@@ -10,17 +10,22 @@ interface Props {
 }
 
 function sanitizeFolderName(title: string): string {
-  return title
-    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+  const name = title
+    .replace(/[/<>:"\\|?*\x00-\x1f\x7f]/g, '')
+    .replace(/[\u200B-\u200F\uFEFF\u00A0]/g, '')
+    .replace(/[：／＼｜＊？＂＜＞]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 80);
+    .replace(/^\.+|\.+$/g, '')
+    .slice(0, 80)
+    .trim();
+  return name || 'untitled';
 }
 
 const PDF_ROOT_FOLDER = 'citation_pdfs';
 
 type CreationStatus = 'idle' | 'creating' | 'done' | 'error';
-type PdfStatus = 'oa' | 'found' | 'missing';
+type PdfStatus = 'oa' | 'oa_downloaded' | 'found' | 'missing';
 
 async function folderHasPdf(dirHandle: FileSystemDirectoryHandle): Promise<boolean> {
   try {
@@ -39,6 +44,10 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
   const [expandedTarget, setExpandedTarget] = useState<number | null>(0);
   const [pdfStatusMap, setPdfStatusMap] = useState<Map<string, PdfStatus>>(new Map());
   const [scanning, setScanning] = useState(false);
+
+  const [dlStatus, setDlStatus] = useState<'idle' | 'downloading' | 'done'>('idle');
+  const [dlProgress, setDlProgress] = useState({ done: 0, failed: 0, total: 0 });
+  const [dlFailedItems, setDlFailedItems] = useState<Array<{ title: string; folder: string; url: string }>>([]);
 
   const allCitings = useMemo(() => {
     const list: Array<{ targetIdx: number; citing: CitingPaper; folder: string }> = [];
@@ -61,17 +70,15 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
     try {
       const pdfRoot = await dirHandle.getDirectoryHandle(PDF_ROOT_FOLDER);
       for (const item of allCitings) {
-        if (item.citing.oa_url) {
-          statusMap.set(item.folder, 'oa');
-          continue;
-        }
         try {
           const sub = await pdfRoot.getDirectoryHandle(item.folder);
           const has = await folderHasPdf(sub);
-          statusMap.set(item.folder, has ? 'found' : 'missing');
-        } catch {
-          statusMap.set(item.folder, 'missing');
-        }
+          if (has) {
+            statusMap.set(item.folder, item.citing.oa_url ? 'oa_downloaded' : 'found');
+            continue;
+          }
+        } catch { /* folder doesn't exist yet */ }
+        statusMap.set(item.folder, item.citing.oa_url ? 'oa' : 'missing');
       }
     } catch {
       for (const item of allCitings) {
@@ -82,13 +89,67 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
     setScanning(false);
   }, [dirHandle, allCitings]);
 
-  const oaCount = useMemo(() => allCitings.filter((c) => c.citing.oa_url).length, [allCitings]);
+  const oaTotal = useMemo(() => allCitings.filter((c) => c.citing.oa_url).length, [allCitings]);
+  const oaDownloadedCount = useMemo(() => {
+    let n = 0;
+    pdfStatusMap.forEach((v) => { if (v === 'oa_downloaded') n++; });
+    return n;
+  }, [pdfStatusMap]);
+  const oaPendingCount = oaTotal - oaDownloadedCount;
   const foundCount = useMemo(() => {
     let n = 0;
     pdfStatusMap.forEach((v) => { if (v === 'found') n++; });
     return n;
   }, [pdfStatusMap]);
-  const missingCount = allCitings.length - oaCount - foundCount;
+  const readyCount = oaDownloadedCount + foundCount;
+  const missingCount = allCitings.length - oaTotal - foundCount;
+
+  const downloadOaPdfs = useCallback(async () => {
+    if (!dirHandle) return;
+    const oaItems = allCitings.filter(
+      (c) => c.citing.oa_url && pdfStatusMap.get(c.folder) !== 'oa_downloaded',
+    );
+    if (oaItems.length === 0) return;
+
+    setDlStatus('downloading');
+    const progress = { done: 0, failed: 0, total: oaItems.length };
+    setDlProgress({ ...progress });
+    const failed: Array<{ title: string; folder: string; url: string }> = [];
+
+    try {
+      const pdfRoot = await dirHandle.getDirectoryHandle(PDF_ROOT_FOLDER, { create: true });
+      for (const item of oaItems) {
+        try {
+          const subDir = await pdfRoot.getDirectoryHandle(item.folder, { create: true });
+          const already = await folderHasPdf(subDir);
+          if (already) { progress.done++; setDlProgress({ ...progress }); continue; }
+
+          const resp = await fetch(item.citing.oa_url);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const contentType = resp.headers.get('content-type') || '';
+          if (!contentType.includes('pdf') && !contentType.includes('octet-stream')) {
+            throw new Error('Not a PDF response');
+          }
+          const blob = await resp.blob();
+
+          const fileName = sanitizeFolderName(item.citing.title).slice(0, 60) + '.pdf';
+          const fileHandle = await subDir.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          progress.done++;
+        } catch {
+          progress.failed++;
+          failed.push({ title: item.citing.title, folder: item.folder, url: item.citing.oa_url });
+        }
+        setDlProgress({ ...progress });
+      }
+    } catch { /* pdfRoot error */ }
+
+    setDlFailedItems(failed);
+    setDlStatus('done');
+    scanPdfStatus();
+  }, [dirHandle, allCitings, pdfStatusMap, scanPdfStatus]);
 
   const creatingRef = useRef(false);
 
@@ -99,15 +160,25 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
     async function createFolders() {
       setCreationStatus('creating');
       setCreatedCount(0);
+      const errors: string[] = [];
       try {
         const pdfRoot = await ensureSubDir(dirHandle!, PDF_ROOT_FOLDER);
         let count = 0;
         for (const item of allCitings) {
-          await ensureSubDir(pdfRoot, item.folder);
+          try {
+            await ensureSubDir(pdfRoot, item.folder);
+          } catch (e) {
+            errors.push(`"${item.folder}": ${e instanceof Error ? e.message : String(e)}`);
+          }
           count++;
           setCreatedCount(count);
         }
-        setCreationStatus('done');
+        if (errors.length > 0) {
+          setCreationStatus('error');
+          setErrorMsg(`${errors.length} folder(s) failed:\n${errors.join('\n')}`);
+        } else {
+          setCreationStatus('done');
+        }
       } catch (e) {
         setCreationStatus('error');
         setErrorMsg(e instanceof Error ? e.message : String(e));
@@ -133,7 +204,11 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
         return {
           ...c,
           pdf_folder: folder,
-          pdf_source: c.oa_url ? ('oa' as const) : status === 'found' ? ('local' as const) : ('unknown' as const),
+          pdf_source: (status === 'oa_downloaded' || status === 'found')
+            ? ('local' as const)
+            : c.oa_url
+              ? ('oa' as const)
+              : ('unknown' as const),
         };
       }),
     }));
@@ -144,11 +219,14 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
     ? `${dirHandle.name}/${PDF_ROOT_FOLDER}`
     : `<working_dir>/${PDF_ROOT_FOLDER}`;
 
-  function statusBadge(folder: string, isOa: boolean) {
-    if (isOa) {
-      return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-700/30 text-green-300">OA</span>;
-    }
+  function statusBadge(folder: string) {
     const st = pdfStatusMap.get(folder);
+    if (st === 'oa_downloaded') {
+      return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-700/30 text-green-300">OA downloaded</span>;
+    }
+    if (st === 'oa') {
+      return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-700/30 text-cyan-300">OA</span>;
+    }
     if (st === 'found') {
       return <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-700/30 text-blue-300">PDF found</span>;
     }
@@ -160,20 +238,102 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
         <h2 className="text-lg font-semibold">Step 4: PDF Preparation</h2>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-green-700">{oaCount}</div>
-            <div className="text-xs text-green-600">Open Access</div>
+            <div className="text-2xl font-bold text-green-700">{readyCount}</div>
+            <div className="text-xs text-green-600">PDF Ready</div>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-blue-700">{foundCount}</div>
-            <div className="text-xs text-blue-600">PDF found locally</div>
+          <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-cyan-700">{oaPendingCount < 0 ? 0 : oaPendingCount}</div>
+            <div className="text-xs text-cyan-600">OA (pending)</div>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
             <div className="text-2xl font-bold text-amber-700">{missingCount < 0 ? 0 : missingCount}</div>
-            <div className="text-xs text-amber-600">PDF missing</div>
+            <div className="text-xs text-amber-600">Non-OA missing</div>
+          </div>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-gray-700">{allCitings.length}</div>
+            <div className="text-xs text-gray-500">Total</div>
           </div>
         </div>
+
+        {/* OA download */}
+        {dirHandle && oaPendingCount > 0 && (
+          <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-800">
+            {dlStatus === 'idle' && (
+              <div className="flex items-center justify-between">
+                <span>{oaPendingCount} OA paper(s) can be downloaded automatically.</span>
+                <button
+                  onClick={downloadOaPdfs}
+                  className="shrink-0 rounded-lg bg-cyan-600 text-white px-4 py-1.5 text-xs font-semibold hover:bg-cyan-700 transition"
+                >
+                  Download OA PDFs
+                </button>
+              </div>
+            )}
+            {dlStatus === 'downloading' && (
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <span>
+                  Downloading... {dlProgress.done + dlProgress.failed}/{dlProgress.total}
+                  {dlProgress.failed > 0 && <span className="text-red-600 ml-1">({dlProgress.failed} failed)</span>}
+                </span>
+              </div>
+            )}
+            {dlStatus === 'done' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span>
+                    Downloaded {dlProgress.done}/{dlProgress.total} OA PDF(s).
+                    {dlProgress.failed > 0 && (
+                      <span className="text-amber-700 ml-1">
+                        {dlProgress.failed} could not be fetched directly.
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => { setDlStatus('idle'); setDlProgress({ done: 0, failed: 0, total: 0 }); setDlFailedItems([]); }}
+                    className="shrink-0 rounded-lg border border-cyan-300 bg-white px-3 py-1.5 text-xs font-medium text-cyan-800 hover:bg-cyan-50 transition"
+                  >
+                    Retry
+                  </button>
+                </div>
+                {dlFailedItems.length > 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                    <p className="text-xs text-amber-800 font-medium">
+                      Please download these PDFs manually, save to the indicated folder, then click Refresh Status:
+                    </p>
+                    <div className="space-y-1.5">
+                      {dlFailedItems.map((item, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs">
+                          <span className="text-amber-600 shrink-0 mt-0.5">{i + 1}.</span>
+                          <div className="min-w-0">
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-blue-700 underline hover:text-blue-900 break-all"
+                            >
+                              {item.title.length > 80 ? item.title.slice(0, 80) + '...' : item.title}
+                            </a>
+                            <div className="text-amber-600 mt-0.5">
+                              Save to: <code className="bg-amber-100 px-1 rounded">{PDF_ROOT_FOLDER}/{item.folder}/</code>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {dirHandle && oaPendingCount === 0 && oaTotal > 0 && (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            All {oaTotal} OA paper(s) downloaded.
+          </div>
+        )}
 
         {/* Folder creation status */}
         {dirHandle ? (
@@ -252,7 +412,7 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
             <h3 className="text-sm font-medium">Folder structure</h3>
             {pdfStatusMap.size > 0 && (
               <span className="text-xs text-gray-400">
-                {oaCount} OA + {foundCount} found + {missingCount < 0 ? 0 : missingCount} missing = {allCitings.length} total
+                {readyCount} ready + {oaPendingCount < 0 ? 0 : oaPendingCount} OA pending + {missingCount < 0 ? 0 : missingCount} missing = {allCitings.length} total
               </span>
             )}
           </div>
@@ -277,18 +437,42 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
                   </div>
                   {citings.slice(0, visibleCount).map((c, ci) => {
                     const folder = sanitizeFolderName(c.title);
-                    const isOa = !!c.oa_url;
                     const st = pdfStatusMap.get(folder);
-                    const folderColor = isOa
+                    const folderColor = st === 'oa_downloaded' || st === 'found'
                       ? 'text-green-400'
-                      : st === 'found'
-                        ? 'text-blue-400'
+                      : st === 'oa'
+                        ? 'text-cyan-400'
                         : 'text-amber-400';
+                    const needsManual = st === 'missing';
                     return (
-                      <div key={ci} className="ml-6 flex items-center gap-2">
+                      <div key={ci} className="ml-6 flex items-center gap-2 flex-wrap">
                         <span className="text-gray-500">├── </span>
                         <span className={folderColor}>{folder}/</span>
-                        {statusBadge(folder, isOa)}
+                        {statusBadge(folder)}
+                        {needsManual && (
+                          <span className="flex items-center gap-1.5 font-sans">
+                            {c.doi && (
+                              <a
+                                href={`https://doi.org/${c.doi}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-700/30 text-violet-300 hover:bg-violet-600/40 transition"
+                                title={`Open DOI: ${c.doi}`}
+                              >
+                                DOI
+                              </a>
+                            )}
+                            <a
+                              href={`https://scholar.google.com/scholar?q=${encodeURIComponent(c.title)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-600/30 text-gray-300 hover:bg-gray-500/40 transition"
+                              title="Search on Google Scholar"
+                            >
+                              Scholar
+                            </a>
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -309,8 +493,8 @@ export default function PdfPreparationStep({ targets, dirHandle, onConfirm, onBa
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 space-y-1">
           <p className="font-medium">Workflow:</p>
           <ol className="list-decimal list-inside space-y-0.5 text-xs">
-            <li>OA papers will be auto-downloaded by the agent.</li>
-            <li>For non-OA papers (amber), download the PDF and place it in the subfolder (any filename is fine).</li>
+            <li>Click <strong>Download OA PDFs</strong> to auto-download open-access papers. If some fail due to CORS, the agent will handle them later.</li>
+            <li>For non-OA papers (amber), download the PDF manually and place it in the subfolder (any filename is fine).</li>
             <li>Click <strong>Refresh Status</strong> to verify PDFs are detected.</li>
             <li>Proceed to export config when ready.</li>
           </ol>

@@ -61,9 +61,26 @@ export default function ConfigPage() {
 
   const stepLabels = ['Search Author', 'Select Papers', 'Citing Papers', 'PDF Prep', 'Export'];
 
+  const isLocal = typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold mb-6 text-center">Configuration Tool</h1>
+
+      {!isLocal && (
+        <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          You are using the online hosted version. For better performance and reliability, we recommend{' '}
+          <a
+            href="https://github.com/yuanmu97/citation-impact#quick-start"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold underline hover:text-amber-900"
+          >
+            running locally
+          </a>.
+        </div>
+      )}
 
       {/* Working directory selector — always visible */}
       <div className="mb-6 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm flex items-center justify-between gap-4">
