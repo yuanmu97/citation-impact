@@ -1,20 +1,18 @@
-import { Link } from 'react-router-dom';
-
 const steps = [
   {
     num: '1',
-    title: 'Configure Locally',
-    desc: 'Run this web UI on your machine. Search your profile, pick papers, and set filter conditions.',
+    title: 'Clone & Start Config UI',
+    desc: 'Clone the repo, run "npm run dev" in the web/ folder, and open the local config tool in your browser.',
   },
   {
     num: '2',
-    title: 'Export Config',
-    desc: 'Config and PDF folders are saved directly to your local project directory.',
+    title: 'Configure & Export',
+    desc: 'Search your profile, pick papers, set filters, and export config.yaml + PDF folders to your workspace.',
   },
   {
     num: '3',
     title: 'Run the Agent',
-    desc: 'Open the directory in Cursor or Claude Code and let the agent analyze your citations.',
+    desc: 'Open the workspace in Cursor or Claude Code and let the agent analyze your citations automatically.',
   },
 ];
 
@@ -34,12 +32,14 @@ export default function QuickStart() {
             </div>
           ))}
         </div>
-        <Link
-          to="/config"
+        <a
+          href="https://github.com/yuanmu97/citation-impact#quick-start"
+          target="_blank"
+          rel="noreferrer"
           className="inline-flex items-center gap-2 rounded-lg bg-primary-600 text-white px-6 py-3 font-semibold hover:bg-primary-700 transition"
         >
-          Open Config Tool <span aria-hidden="true">&rarr;</span>
-        </Link>
+          View Full Guide <span aria-hidden="true">&rarr;</span>
+        </a>
       </div>
     </section>
   );

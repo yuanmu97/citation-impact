@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 text-white">
@@ -16,15 +14,17 @@ export default function Hero() {
           rankings and sentiment analysis.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            to="/config"
+          <a
+            href="https://github.com/yuanmu97/citation-impact#quick-start"
+            target="_blank"
+            rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-white text-primary-700 px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition"
           >
             Get Started
             <span aria-hidden="true">&rarr;</span>
-          </Link>
+          </a>
           <a
-            href="https://github.com/your-username/citation-impact"
+            href="https://github.com/yuanmu97/citation-impact"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-6 py-3 font-semibold hover:bg-white/10 transition"

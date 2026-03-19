@@ -4,7 +4,7 @@ export default function Footer() {
       <p>
         Citation Impact Analyzer &mdash; MIT License &mdash;{' '}
         <a
-          href="https://github.com/your-username/citation-impact"
+          href="https://github.com/yuanmu97/citation-impact"
           target="_blank"
           rel="noreferrer"
           className="underline hover:text-gray-600"
