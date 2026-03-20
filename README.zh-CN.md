@@ -139,6 +139,11 @@ Web 工具生成 v2.0 配置，真实样例见 [`example/config.yaml`](example/c
 | `citing_papers[].pdf_folder` | `citation_pdfs/` 下的子目录名，PDF 放于此                               |
 | `options.pdf_dir`            | 必须为 `"."`，即 `citation_pdfs/` 位于工作区根目录                    |
 | `options.output_dir`         | 结果输出目录                                                              |
+| `options.pdf_download_concurrency` | 并行下载 PDF 数量（默认 **1**）。过大容易触发出版社对 IP 的封禁。 |
+| `options.pdf_download_delay_seconds` | 每次**远程**拉取 PDF 前的等待秒数（默认 **1.5**）。 |
+| `options.pdf_pause_between_sources_seconds` | 换下一个下载源（OA → DOI → Unpaywall）前的间隔（默认 **0.75**）。 |
+
+**为何会被 ACM 等封 IP：** 流水线会请求 OA 链接、`doi.org` 跳转及 Unpaywall 给出的 PDF 地址，常落在 **ACM Digital Library** 等站点；同一 IP 短时间大量 GET 易被判定为异常流量。大批量 ACM 论文时建议**手动放入** `citation_pdfs/`，或保持上述默认限流。
 
 ## 环境要求
 

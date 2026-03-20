@@ -29,8 +29,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-PDF_CONCURRENT = 5
-
 
 def _sanitize_dirname(title: str) -> str:
     """Create a safe directory name from a paper title."""
@@ -168,7 +166,15 @@ async def _process_paper_v1(
         json.dump(filtered, f, ensure_ascii=False, indent=2)
 
     if config.get("download_pdfs", True) and filtered:
-        await _download_and_extract(filtered, target, pdf_dir, session)
+        await _download_and_extract(
+            filtered,
+            target,
+            pdf_dir,
+            session,
+            pdf_concurrency=config.get("pdf_download_concurrency", 1),
+            pdf_delay_seconds=config.get("pdf_download_delay_seconds", 1.5),
+            pdf_pause_between_sources=config.get("pdf_pause_between_sources_seconds", 0.75),
+        )
     else:
         for c in filtered:
             c["citation_contexts"] = []
@@ -237,6 +243,10 @@ async def _process_paper_v2(
     output_dir: Path,
     session: aiohttp.ClientSession,
     researcher_name: str = "",
+    *,
+    pdf_concurrency: int = 1,
+    pdf_delay_seconds: float = 1.5,
+    pdf_pause_between_sources: float = 0.75,
 ) -> dict:
     """Process a single target paper (v2.0): uses pre-built citing paper list.
 
@@ -284,8 +294,11 @@ async def _process_paper_v2(
             c["_pdf_dir"] = str(folder)
 
         print(f"  Created {len(citations)} paper folders under {pdf_root}")
-        print(f"  Downloading OA PDFs / checking local folders...")
-        sem = asyncio.Semaphore(PDF_CONCURRENT)
+        print(
+            f"  Downloading OA PDFs / checking local folders "
+            f"(concurrency={pdf_concurrency}, delay={pdf_delay_seconds}s between remote downloads)..."
+        )
+        sem = asyncio.Semaphore(pdf_concurrency)
 
         async def _download_one(citation: dict) -> tuple[dict, bool]:
             async with sem:
@@ -296,8 +309,16 @@ async def _process_paper_v2(
                     citation["_pdf_path"] = local
                     return citation, True
 
+                if pdf_delay_seconds > 0:
+                    await asyncio.sleep(pdf_delay_seconds)
+
                 save_path = str(folder / "paper.pdf")
-                ok = await download_pdf(session, citation, save_path)
+                ok = await download_pdf(
+                    session,
+                    citation,
+                    save_path,
+                    pause_between_sources_seconds=pdf_pause_between_sources,
+                )
                 if ok:
                     citation["_pdf_path"] = save_path
                 return citation, ok
@@ -374,18 +395,32 @@ async def _download_and_extract(
     target: dict,
     pdf_dir: Path,
     session: aiohttp.ClientSession,
+    *,
+    pdf_concurrency: int = 1,
+    pdf_delay_seconds: float = 1.5,
+    pdf_pause_between_sources: float = 0.75,
 ) -> None:
     """Download PDFs and extract citation contexts for filtered papers."""
-    print(f"  Downloading PDFs (up to {PDF_CONCURRENT} concurrent)...")
-    sem = asyncio.Semaphore(PDF_CONCURRENT)
+    print(
+        f"  Downloading PDFs (concurrency={pdf_concurrency}, "
+        f"delay={pdf_delay_seconds}s between remote downloads)..."
+    )
+    sem = asyncio.Semaphore(pdf_concurrency)
 
     async def _download_one(citation: dict) -> tuple[dict, bool, str]:
         async with sem:
+            if pdf_delay_seconds > 0:
+                await asyncio.sleep(pdf_delay_seconds)
             doi = citation.get("doi", "")
             doi_id = doi.split("doi.org/")[-1] if "doi.org/" in doi else doi
             safe_name = doi_id.replace("/", "_") if doi_id else citation.get("id", "unknown").split("/")[-1]
             pdf_path = str(pdf_dir / f"{safe_name}.pdf")
-            ok = await download_pdf(session, citation, pdf_path)
+            ok = await download_pdf(
+                session,
+                citation,
+                pdf_path,
+                pause_between_sources_seconds=pdf_pause_between_sources,
+            )
             return citation, ok, pdf_path
 
     tasks = [_download_one(c) for c in filtered]
@@ -450,12 +485,25 @@ async def run(config_path: str):
         pdf_dir_str = config.get("pdf_dir", "") or "."
         pdf_root = Path(pdf_dir_str).resolve() / PDF_ROOT_FOLDER
         print(f"  PDF root: {pdf_root}")
+        print(
+            f"  PDF download policy: concurrency={config.get('pdf_download_concurrency', 1)}, "
+            f"inter-download delay={config.get('pdf_download_delay_seconds', 1.5)}s"
+        )
 
         researcher_name = config.get("researcher_name", "")
 
         async with aiohttp.ClientSession() as session:
             tasks = [
-                _process_paper_v2(tp, pdf_root, output_dir, session, researcher_name)
+                _process_paper_v2(
+                    tp,
+                    pdf_root,
+                    output_dir,
+                    session,
+                    researcher_name,
+                    pdf_concurrency=config.get("pdf_download_concurrency", 1),
+                    pdf_delay_seconds=config.get("pdf_download_delay_seconds", 1.5),
+                    pdf_pause_between_sources=config.get("pdf_pause_between_sources_seconds", 0.75),
+                )
                 for tp in target_papers
             ]
             summaries = await asyncio.gather(*tasks, return_exceptions=True)

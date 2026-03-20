@@ -47,11 +47,13 @@ The script will:
 - Create the output directory structure
 - For v2.0 configs: use the pre-selected citing papers (no API calls needed for filtering)
 - Create per-paper folders under **workspace root** `citation_pdfs/` (pdf_dir is `"."` in generated configs)
-- Download Open Access PDFs automatically
+- Download Open Access PDFs automatically (with **conservative rate limits** by default — see below)
 - Find user-placed PDFs in `citation_pdfs/<paper_folder>/` under the workspace root
 - Extract text from each PDF using PyMuPDF
 - Locate citation contexts (sentences referencing the target paper)
 - Generate `summary.json` files and an initial `citation_report.md`
+
+**PDF downloads and publisher blocks (e.g. ACM):** The pipeline may hit **ACM Digital Library** (`dl.acm.org`), **IEEE Xplore**, etc., because it tries (in order) the OpenAlex OA URL, `https://doi.org/...` (which redirects to the publisher), and Unpaywall. **Many concurrent GETs from one IP look like automated scraping** and can trigger IP bans. Defaults are now: **concurrency 1**, **~1.5s delay** before each remote download, and **pauses between fallback URLs**. Users can tune under `options` in `config.yaml`: `pdf_download_concurrency`, `pdf_download_delay_seconds`, `pdf_pause_between_sources_seconds`. If a user is blocked or wants zero risk, set `download_pdfs: false` (v1) or **place PDFs manually** in `citation_pdfs/<folder>/` and skip relying on auto-download for paywalled venues.
 
 ### Step 4: Analyze and complete the report
 

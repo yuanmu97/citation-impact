@@ -6,6 +6,17 @@ from pathlib import Path
 import yaml
 
 
+def _default_pdf_options(options: dict) -> dict:
+    """Conservative defaults: many publishers (ACM DL, IEEE, etc.) rate-limit by IP."""
+    return {
+        "pdf_download_concurrency": max(1, int(options.get("pdf_download_concurrency", 1))),
+        "pdf_download_delay_seconds": max(0.0, float(options.get("pdf_download_delay_seconds", 1.5))),
+        "pdf_pause_between_sources_seconds": max(
+            0.0, float(options.get("pdf_pause_between_sources_seconds", 0.75))
+        ),
+    }
+
+
 def _parse_v1(raw: dict) -> dict:
     """Parse legacy v1.0 config format."""
     if "papers" not in raw or not isinstance(raw["papers"], list) or not raw["papers"]:
@@ -47,6 +58,10 @@ def _parse_v1(raw: dict) -> dict:
 
     researcher = raw.get("researcher") or {}
     options = raw.get("options") or {}
+    if not isinstance(options, dict):
+        options = {}
+
+    pdf = _default_pdf_options(options)
 
     return {
         "version": "1.0",
@@ -55,8 +70,9 @@ def _parse_v1(raw: dict) -> dict:
         "openalex_author_id": researcher.get("openalex_id", "") if isinstance(researcher, dict) else "",
         "papers": papers,
         "filters": filters,
-        "download_pdfs": options.get("download_pdfs", True) if isinstance(options, dict) else True,
-        "output_dir": options.get("output_dir", "./citation_output") if isinstance(options, dict) else "./citation_output",
+        "download_pdfs": options.get("download_pdfs", True),
+        "output_dir": options.get("output_dir", "./citation_output"),
+        **pdf,
     }
 
 
@@ -97,6 +113,10 @@ def _parse_v2(raw: dict) -> dict:
 
     researcher = raw.get("researcher") or {}
     options = raw.get("options") or {}
+    if not isinstance(options, dict):
+        options = {}
+
+    pdf = _default_pdf_options(options)
 
     return {
         "version": "2.0",
@@ -104,8 +124,9 @@ def _parse_v2(raw: dict) -> dict:
         "google_scholar_id": researcher.get("google_scholar_id", "") if isinstance(researcher, dict) else "",
         "openalex_author_id": researcher.get("openalex_id", "") if isinstance(researcher, dict) else "",
         "target_papers": target_papers,
-        "pdf_dir": (options.get("pdf_dir") or ".") if isinstance(options, dict) else ".",
-        "output_dir": options.get("output_dir", "./citation_output") if isinstance(options, dict) else "./citation_output",
+        "pdf_dir": options.get("pdf_dir") or ".",
+        "output_dir": options.get("output_dir", "./citation_output"),
+        **pdf,
     }
 
 

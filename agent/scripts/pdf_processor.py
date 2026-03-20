@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from pathlib import Path
@@ -48,7 +49,11 @@ def _extract_doi_id(doi: str) -> str | None:
 
 
 async def download_pdf(
-    session: aiohttp.ClientSession, work: dict, save_path: str
+    session: aiohttp.ClientSession,
+    work: dict,
+    save_path: str,
+    *,
+    pause_between_sources_seconds: float = 0.75,
 ) -> bool:
     """Try multiple sources to download a PDF for the given work.
 
@@ -57,20 +62,31 @@ async def download_pdf(
       2. DOI redirect (https://doi.org/{doi})
       3. Unpaywall API
 
+    ACM Digital Library and other publishers often rate-limit by IP; short pauses
+    between attempts reduce the chance of triggering automated anti-abuse systems.
+
     Args:
         session: Active aiohttp session.
         work: Work dict with open_access.oa_url, doi fields.
         save_path: Local path to save the PDF.
+        pause_between_sources_seconds: Sleep after a failed attempt before trying the next URL.
 
     Returns:
         True if download succeeded, False otherwise.
     """
+    pause = max(0.0, pause_between_sources_seconds)
+
+    async def _pause() -> None:
+        if pause > 0:
+            await asyncio.sleep(pause)
+
     oa_url = (work.get("open_access") or {}).get("oa_url")
     if oa_url:
         logger.info("尝试 OA 链接: %s", oa_url)
         if await _try_download(session, oa_url, save_path):
             logger.info("通过 OA 链接下载成功")
             return True
+        await _pause()
 
     doi = work.get("doi", "")
     doi_id = _extract_doi_id(doi)
@@ -81,6 +97,7 @@ async def download_pdf(
         if await _try_download(session, doi_url, save_path):
             logger.info("通过 DOI 重定向下载成功")
             return True
+        await _pause()
 
     if doi_id:
         unpaywall_url = f"https://api.unpaywall.org/v2/{doi_id}?email=citation-impact@example.com"

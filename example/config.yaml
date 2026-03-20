@@ -79,3 +79,7 @@ target_papers:
 options:
   pdf_dir: .
   output_dir: ./citation_output
+  # Optional — throttle PDF downloads to avoid publisher IP blocks (ACM DL, IEEE, etc.)
+  # pdf_download_concurrency: 1
+  # pdf_download_delay_seconds: 1.5
+  # pdf_pause_between_sources_seconds: 0.75

@@ -133,6 +133,11 @@ The web tool generates v2.0 configs. See [`example/config.yaml`](example/config.
 | `citing_papers[].pdf_folder` | Subfolder under `citation_pdfs/` — place your PDF here                        |
 | `options.pdf_dir`            | Must be `"."` — `citation_pdfs/` lives at workspace root                    |
 | `options.output_dir`         | Output directory for results                                                     |
+| `options.pdf_download_concurrency` | Max parallel PDF downloads (default **1**). Higher values risk publisher IP blocks. |
+| `options.pdf_download_delay_seconds` | Seconds to wait before each **remote** PDF fetch (default **1.5**). |
+| `options.pdf_pause_between_sources_seconds` | Pause after a failed URL before trying the next (OA → DOI → Unpaywall; default **0.75**). |
+
+**Why IPs get blocked:** The downloader follows OA links and DOI redirects to sites like **ACM DL**. Many papers in one run ⇒ many requests from one IP ⇒ often flagged as bot traffic. Prefer **manual PDFs** in `citation_pdfs/` for large ACM-heavy batches, or keep the defaults above.
 
 ## Requirements
 
