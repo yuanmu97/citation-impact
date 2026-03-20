@@ -1,8 +1,12 @@
+import { useLocale } from '../../i18n';
+
 export default function Footer() {
+  const { t } = useLocale();
+
   return (
     <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-400">
       <p>
-        Citation Impact Analyzer &mdash; MIT License &mdash;{' '}
+        {t.footer.line}{' '}
         <a
           href="https://github.com/yuanmu97/citation-impact"
           target="_blank"

@@ -57,7 +57,12 @@ The script will:
 
 After the script completes, read each paper's `summary.json` under `<output_dir>/<paper_name>/summary.json`.
 
-For each citing paper, fill in **three columns** in `<output_dir>/citation_report.md`:
+For each citing paper, fill in **four areas** in `<output_dir>/citation_report.md`:
+
+**引用原文 (citation context)**:
+- Check `citation_contexts` in `summary.json`. If non-empty, the pipeline already extracted them.
+- If empty (`[]`) but a PDF exists in `citation_pdfs/<pdf_folder>/`, **read the PDF directly** to find where the target paper is cited. Search for the target paper's title keywords, author names, or reference numbers like `[N]`. Extract the surrounding 2-3 sentences as context.
+- Only mark as "(未提取到)" when the PDF is genuinely unavailable (not downloaded).
 
 **机构 (institutions)**:
 - Read `first_pages_text` from `summary.json` — it contains the first 2 pages where author affiliations typically appear.
@@ -75,7 +80,7 @@ Consider the full context: look for words like "seminal", "groundbreaking", "bui
 
 **分析说明 (reasoning)** — briefly explain the classification (e.g. which section, how the target paper is referenced, any praise or criticism).
 
-For citations without extracted context (PDF unavailable), mark context as "(未提取到)" and classify as "一般引用" by default.
+For citations where the PDF exists but the pipeline extracted no context, you **must** read the PDF yourself and extract the citation context — do not leave it as "(未提取到)". Only mark as "(未提取到)" and default to "一般引用" when the PDF is truly unavailable (download failed, not provided).
 
 ### Step 5: Add summary statistics
 
@@ -89,6 +94,36 @@ At the end of each paper's table, add:
 ```
 
 Add a final overall summary section at the end of the report.
+
+### Step 6: Deep annotation for high-praise citations
+
+For each citation classified as **高度评价**, add a blockquote section **after the citation table and before the 总结**, with author background and institution assessment:
+
+**Author background research** — For the top 2-3 authors and corresponding author, **search** for notable titles/honors:
+- IEEE Fellow, ACM Fellow, or other society fellowships
+- National-level talent titles (杰青、长江学者、优青、院士, etc.)
+- Leadership positions (department chair, dean, lab director, etc.)
+- Only report what you find with confidence. Do not guess or fabricate.
+
+**Institution assessment** — Based on the already-extracted institution info, assess whether it qualifies as a top-tier research institution using your own knowledge:
+- Top CS departments (e.g. CSRankings top-ranked universities)
+- Elite enterprise labs (e.g. MSRA, Google DeepMind, Meta FAIR, etc.)
+- State key laboratories, national research centers
+
+**Format** — Insert one blockquote per high-praise citation, between the table and the 总结:
+
+```markdown
+> **#N 高度评价背景**:
+> - **知名作者**: Author Name (IEEE Fellow), Another Author (杰青)
+> - **头部机构**: University Name (CSRankings top-N in XX); Lab Name
+```
+
+If no notable authors or institutions are found, simply omit that bullet — do not write "无".
+
+**Overall summary** — At the end of the final 整体总结 paragraph, append a sentence summarizing how many notable scholars and top institutions appear among the high-praise citations, as evidence of citation quality. For example:
+```
+高度评价引用中包含 X 位知名学者（IEEE/ACM Fellow 等）和 Y 所头部机构，进一步表明该工作在领域内的认可度。
+```
 
 ## Config Format (v2.0)
 

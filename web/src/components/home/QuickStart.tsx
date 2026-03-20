@@ -1,33 +1,18 @@
 import { Link } from 'react-router-dom';
-
-const steps = [
-  {
-    num: '1',
-    title: 'Configure',
-    desc: 'Use the Config Tool to search your papers, select citing papers, and set filter conditions.',
-  },
-  {
-    num: '2',
-    title: 'Export',
-    desc: 'Choose a local working directory. Config and PDF folders are saved directly to your machine.',
-  },
-  {
-    num: '3',
-    title: 'Run the Agent',
-    desc: 'Open the workspace in Cursor or Claude Code and let the agent analyze your citations.',
-  },
-];
+import { useLocale } from '../../i18n';
 
 export default function QuickStart() {
+  const { t } = useLocale();
+
   return (
     <section className="py-20">
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-3xl font-bold mb-12">Quick Start</h2>
+        <h2 className="text-3xl font-bold mb-12">{t.quickStart.sectionTitle}</h2>
         <div className="grid sm:grid-cols-3 gap-8 mb-12">
-          {steps.map((s) => (
-            <div key={s.num}>
+          {t.quickStart.steps.map((s, i) => (
+            <div key={s.title}>
               <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold text-lg flex items-center justify-center mx-auto mb-4">
-                {s.num}
+                {String(i + 1)}
               </div>
               <h3 className="font-semibold mb-1">{s.title}</h3>
               <p className="text-sm text-gray-500">{s.desc}</p>
@@ -38,19 +23,19 @@ export default function QuickStart() {
           to="/config"
           className="inline-flex items-center gap-2 rounded-lg bg-primary-600 text-white px-6 py-3 font-semibold hover:bg-primary-700 transition"
         >
-          Open Config Tool <span aria-hidden="true">&rarr;</span>
+          {t.quickStart.openConfig} <span aria-hidden="true">&rarr;</span>
         </Link>
         <p className="mt-4 text-xs text-gray-400">
-          Requires Chrome or Edge. For best performance,{' '}
+          {t.quickStart.footnote}{' '}
           <a
-            href="https://github.com/yuanmu97/citation-impact#quick-start"
+            href={t.quickStart.readmeQuickStartUrl}
             target="_blank"
             rel="noreferrer"
             className="underline hover:text-gray-600"
           >
-            run locally
-          </a>{' '}
-          instead.
+            {t.quickStart.footnoteLink}
+          </a>
+          {t.quickStart.footnoteEnd}
         </p>
       </div>
     </section>

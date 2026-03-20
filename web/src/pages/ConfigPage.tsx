@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { PaperItem, SelectedPaper, TargetPaperWithCitings } from '../types';
+import { useLocale } from '../i18n';
 import StepWizard from '../components/config/StepWizard';
 import AuthorSearch from '../components/config/AuthorSearch';
 import PaperSelector from '../components/config/PaperSelector';
@@ -15,6 +16,9 @@ export interface AuthorInfo {
 }
 
 export default function ConfigPage() {
+  const { t } = useLocale();
+  const cfg = t.config;
+
   const [step, setStep] = useState(0);
 
   const [dirHandle, setDirHandle] = useState<FileSystemDirectoryHandle | null>(null);
@@ -59,37 +63,38 @@ export default function ConfigPage() {
     setStep(4);
   }, []);
 
-  const stepLabels = ['Search Author', 'Select Papers', 'Citing Papers', 'PDF Prep', 'Export'];
+  const stepLabels = cfg.steps;
 
   const isLocal = typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold mb-6 text-center">Configuration Tool</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">{cfg.title}</h1>
 
       {!isLocal && (
         <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          You are using the online hosted version. For better performance and reliability, we recommend{' '}
+          {cfg.onlineBannerBefore}{' '}
           <a
-            href="https://github.com/yuanmu97/citation-impact#quick-start"
+            href={cfg.readmeQuickStartUrl}
             target="_blank"
             rel="noreferrer"
             className="font-semibold underline hover:text-amber-900"
           >
-            running locally
-          </a>.
+            {cfg.onlineBannerLink}
+          </a>
+          {cfg.onlineBannerAfter}
         </div>
       )}
 
       {/* Working directory selector — always visible */}
       <div className="mb-6 bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-sm font-medium text-gray-700 shrink-0">Working Directory:</span>
+          <span className="text-sm font-medium text-gray-700 shrink-0">{cfg.workingDir}</span>
           {dirHandle ? (
             <span className="text-sm text-primary-700 font-mono truncate">{dirName}/</span>
           ) : (
-            <span className="text-sm text-gray-400 italic">Not selected</span>
+            <span className="text-sm text-gray-400 italic">{cfg.notSelected}</span>
           )}
         </div>
         {fsSupported ? (
@@ -97,12 +102,10 @@ export default function ConfigPage() {
             onClick={handlePickDir}
             className="shrink-0 rounded-lg bg-gray-800 text-white px-4 py-1.5 text-sm font-medium hover:bg-gray-700 transition"
           >
-            {dirHandle ? 'Change' : 'Choose Folder'}
+            {dirHandle ? cfg.change : cfg.chooseFolder}
           </button>
         ) : (
-          <span className="text-xs text-amber-600 shrink-0">
-            File System Access not supported — use Chrome or Edge
-          </span>
+          <span className="text-xs text-amber-600 shrink-0">{cfg.fsUnsupported}</span>
         )}
       </div>
 

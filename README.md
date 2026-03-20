@@ -1,6 +1,11 @@
 # Citation Impact Analyzer
 
+**Languages:** English · [简体中文](README.zh-CN.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Homepage](https://img.shields.io/badge/Homepage-GitHub%20Pages-blue?logo=github)](https://yuanmu97.github.io/citation-impact/)
+
+> **[Live Demo &amp; Documentation](https://yuanmu97.github.io/citation-impact/)** — Open the project site for the interactive config tool and quick start. 
 
 **Citation Impact Analyzer** helps researchers understand *how* their papers are cited. It uses a local web UI to configure the analysis, then an AI agent (Cursor / Claude Code) to run the pipeline — downloading PDFs, extracting citation contexts, and classifying each citation as high praise, neutral reference, or critical mention.
 
@@ -78,7 +83,8 @@ The agent will:
 - Install Python dependencies (`aiohttp`, `PyMuPDF`, `pyyaml`)
 - Run the extraction pipeline (download OA PDFs, extract text, find citation contexts)
 - Read each PDF's first pages to identify author institutions
-- Classify each citation as 高度评价 / 一般引用 / 批评性引用
+- Classify each citation as **high praise**, **neutral reference**, or **critical** (report text may use Chinese labels: 高度评价 / 一般引用 / 批评性引用)
+- For high-praise citations, research author backgrounds (e.g. IEEE/ACM Fellow, national talent programs) and assess institution influence
 - Produce a complete `citation_output/citation_report.md`
 
 ## Example
@@ -90,19 +96,29 @@ A complete working example is included in the [`example/`](example/) folder:
 
 Below is a condensed view of the report for [PacketGame (ACM SIGCOMM 2023)](https://doi.org/10.1145/3603269.3604825):
 
-> **研究者**: Mu Yuan (袁牧) &nbsp;|&nbsp; **分析论文数**: 1 篇 &nbsp;|&nbsp; **符合条件被引**: 5 次
+> **Researcher:** Mu Yuan &nbsp;|&nbsp; **Papers analyzed:** 1 &nbsp;|&nbsp; **Matching citations:** 5
 
-| # | 他引论文                                            | 机构                    | 发表出处 | 年份 | 评级 | 评价类型           | 分析说明                                        |
-| - | --------------------------------------------------- | ----------------------- | -------- | ---- | ---- | ------------------ | ----------------------------------------------- |
-| 1 | Déjà Vu: Efficient Video-Language Query Engine... | Korea University        | VLDB     | 2025 | B    | 一般引用           | 视频推理领域相关工作引用                        |
-| 2 | Empower Vision Applications with LoRA LMM           | Nanjing Univ.; Tsinghua | EuroSys  | 2025 | A    | **高度评价** | 3 个章节中 3 次引用，作为实时视频分析代表性工作 |
-| 3 | Palantir: Towards Efficient Super Resolution...     | Tsinghua; Simon Fraser  | MMSys    | 2025 | A    | 一般引用           | DAG Construction 中作为背景事实引用             |
-| 4 | AMRE: Adaptive Multilevel Redundancy Elimination... | Tianjin Univ.           | IEEE TMC | 2025 | A    | 一般引用           | Related Work 中以列举方式归类为输入区域优化工作 |
-| 5 | Online Container Caching with Late-Warm...          | USTC; MSRA              | ICDE     | 2024 | A    | 一般引用           | Introduction 中作为 IoT 推理任务示例            |
+| # | Citing paper                                        | Institution                       | Venue             | Year | Rank        | Sentiment                | Notes                                                                      |
+| - | --------------------------------------------------- | --------------------------------- | ----------------- | ---- | ----------- | ------------------------ | -------------------------------------------------------------------------- |
+| 1 | Déjà Vu: Efficient Video-Language Query Engine... | Korea University                  | VLDB              | 2025 | B           | Neutral                  | Standard background citation in video inference                            |
+| 2 | **Empower Vision Applications with LoRA LMM** | **Nanjing Univ.; Tsinghua** | **EuroSys** | 2025 | **A** | **⭐ High praise** | Cited 3× across sections as representative real-time video analytics work |
+| 3 | Palantir: Towards Efficient Super Resolution...     | Tsinghua; Simon Fraser            | MMSys             | 2025 | A           | Neutral                  | Factual background in DAG construction                                     |
+| 4 | AMRE: Adaptive Multilevel Redundancy Elimination... | Tianjin Univ.                     | IEEE TMC          | 2025 | A           | Neutral                  | Listed in Related Work as input-region optimization                        |
+| 5 | Online Container Caching with Late-Warm...          | USTC; MSRA                        | ICDE              | 2024 | A           | Neutral                  | Example IoT inference task in Introduction                                 |
 
-> 高度评价 1 (20%) · 一般引用 4 (80%) · 批评性引用 0
+**High-praise deep annotation (#2)**
 
-The agent extracts full citation contexts from PDFs, identifies author institutions, and classifies each citation with reasoning. See the [full report](example/citation_report.md) for all details.
+|                            |                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Notable authors**  | Yunxin Liu — IEEE Fellow; Deputy Dean, Tsinghua AIR; former MSRA Principal Research Manager           |
+|                            | Guihai Chen — IEEE Fellow, CCF Fellow; NSFC Distinguished Young Scholar                               |
+|                            | Haipeng Dai — Ministry of Education Young Changjiang Scholar; IET Fellow                              |
+| **Top institutions** | Nanjing University — State Key Lab for Novel Software Technology; top-tier CS department (CSRankings) |
+|                            | Tsinghua Institute for AI Industry Research (AIR)                                                      |
+
+*Summary:* High praise 1 (20%) · Neutral 4 (80%) · Critical 0
+
+The agent extracts full citation contexts, identifies institutions, classifies each citation with reasoning, and **annotates high-praise citations with notable scholar/institution backgrounds**. Full sample output: [example/citation_report.md](example/citation_report.md) (the agent may emit Chinese section headers and sentiment labels; the homepage **ZH** mode matches that style).
 
 ## Config Format (v2.0)
 

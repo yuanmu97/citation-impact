@@ -23,6 +23,10 @@
 | 4 | AMRE: Adaptive Multilevel Redundancy Elimination for Multimodal Mobile Inference | Qixuan Cai, Rui Chu, Kaixuan Zhang, Xiulong Liu, Xinyu Tong 等 (8 人) | Tianjin University; Xiamen Intretech Inc. | IEEE Transactions on Mobile Computing | 2025 | A | "Partial elimination: Some works reduce model computation by minimizing certain input regions [29], [30], [31]." | 一般引用 | Related Work 的 IRE 小节中，以 [29],[30],[31] 列举方式引用 PacketGame，归类为"通过最小化输入区域减少计算"的工作之一，属标准背景引用，无褒贬。 |
 | 5 | Online Container Caching with Late-Warm for IoT Data Processing | Guopeng Li, Haisheng Tan, Xuan Zhang, Chi Zhang, Ruiting Zhou 等 (7 人) | USTC; Southeast University; Microsoft Research Asia | IEEE ICDE 2024 | 2024 | A | "An object detection and recognition task using a motion-activated camera is triggered by motion, completes within 5 seconds, and experiences a surge in frequency when more objects are detected [16], [17]." | 一般引用 | Introduction 中引用 PacketGame [16] 作为 IoT 场景下物体检测任务的示例，说明动态相机触发的推理任务特征，属标准背景引用。 |
 
+> **#2 高度评价背景**:
+> - **知名作者**: Yunxin Liu / 刘云新（IEEE Fellow, 清华大学智能产业研究院副院长, 原 MSRA 首席研究经理）; Guihai Chen / 陈贵海（IEEE Fellow, CCF Fellow, 国家杰青）; Haipeng Dai / 戴海鹏（教育部青年长江学者, IET Fellow）
+> - **头部机构**: 南京大学计算机科学与技术系（国家重点实验室, CSRankings 中国 Top-5）; 清华大学智能产业研究院 (AIR)
+
 ### 总结
 - 高度评价: 1 citations (20.0%)
 - 一般引用: 4 citations (80.0%)
@@ -38,4 +42,4 @@
 | 一般引用 | 4 | 80.0% |
 | 批评性引用 | 0 | 0.0% |
 
-**总体分析**: PacketGame 在 5 篇引用论文中被广泛引用，覆盖实时视频分析 (VaLoRA, EuroSys'25)、视频语言查询 (Déjà Vu, VLDB'25)、超高清直播超分辨率 (Palantir, MMSys'25)、多模态移动推理 (AMRE, IEEE TMC'25)、IoT 容器缓存 (OnCoLa, ICDE'24) 等多个方向。其中 VaLoRA 在三个章节中 3 次引用 PacketGame 作为实时视频分析的代表性工作，体现了较高的学术认可度。整体而言，PacketGame 被定位为并发视频推理领域的重要基础性工作，无批评性引用。
+**总体分析**: PacketGame 在 5 篇引用论文中被广泛引用，覆盖实时视频分析 (VaLoRA, EuroSys'25)、视频语言查询 (Déjà Vu, VLDB'25)、超高清直播超分辨率 (Palantir, MMSys'25)、多模态移动推理 (AMRE, IEEE TMC'25)、IoT 容器缓存 (OnCoLa, ICDE'24) 等多个方向。其中 VaLoRA 在三个章节中 3 次引用 PacketGame 作为实时视频分析的代表性工作，体现了较高的学术认可度。整体而言，PacketGame 被定位为并发视频推理领域的重要基础性工作，无批评性引用。高度评价引用中包含 3 位知名学者（IEEE Fellow: Yunxin Liu、Guihai Chen; 国家杰青: Guihai Chen; 青年长江: Haipeng Dai）和 2 所头部机构（南京大学国家重点实验室、清华大学 AIR），进一步表明 PacketGame 获得了领域内顶尖团队的认可。

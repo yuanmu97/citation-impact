@@ -1,4 +1,27 @@
-const citations = [
+import { Fragment } from 'react';
+import { useLocale } from '../../i18n';
+import type { Locale } from '../../i18n/translations';
+
+type SentimentKey = 'high' | 'neutral' | 'critical';
+
+type HighPraiseDetail = {
+  scholars: { name: string; titles: string }[];
+  institutions: string[];
+};
+
+const citations: {
+  num: number;
+  title: string;
+  authors: string;
+  institution: string;
+  venue: string;
+  year: number;
+  rank: string;
+  context: string;
+  sentimentKey: SentimentKey;
+  reasoning: Record<Locale, string>;
+  highPraiseDetail?: Record<Locale, HighPraiseDetail>;
+}[] = [
   {
     num: 1,
     title: 'Déjà Vu: Efficient Video-Language Query Engine with Learning-Based Inter-Frame Computation Reuse',
@@ -8,8 +31,11 @@ const citations = [
     year: 2025,
     rank: 'B',
     context: '"PacketGame [115] cited as related work in video inference computation reuse."',
-    sentiment: '一般引用' as const,
-    reasoning: '视频推理领域相关工作引用，属标准背景引用。',
+    sentimentKey: 'neutral',
+    reasoning: {
+      en: 'Standard background citation in video inference.',
+      zh: '视频推理领域相关工作引用，属标准背景引用。',
+    },
   },
   {
     num: 2,
@@ -19,9 +45,46 @@ const citations = [
     venue: 'EuroSys',
     year: 2025,
     rank: 'A',
-    context: '"Real-time video analytics application [92, 93] needs low latency..." / "...image classification [92], vehicle counting [57]..." / "...like prior work [79, 92]."',
-    sentiment: '高度评价' as const,
-    reasoning: '3 个章节中 3 次引用，作为实时视频分析领域的代表性工作。',
+    context:
+      '"Real-time video analytics application [92, 93] needs low latency..." / "...image classification [92], vehicle counting [57]..." / "...like prior work [79, 92]."',
+    sentimentKey: 'high',
+    reasoning: {
+      en: 'Cited three times across sections as representative real-time video analytics work.',
+      zh: '3 个章节中 3 次引用，作为实时视频分析领域的代表性工作。',
+    },
+    highPraiseDetail: {
+      en: {
+        scholars: [
+          {
+            name: 'Yunxin Liu',
+            titles: 'IEEE Fellow; Deputy Dean, Tsinghua AIR; former MSRA Principal Research Manager',
+          },
+          {
+            name: 'Guihai Chen',
+            titles: 'IEEE Fellow, CCF Fellow; NSFC Distinguished Young Scholar',
+          },
+          {
+            name: 'Haipeng Dai',
+            titles: 'Ministry of Education Young Changjiang Scholar; IET Fellow',
+          },
+        ],
+        institutions: [
+          'Nanjing University — State Key Lab for Novel Software Technology; top-tier CS department (CSRankings)',
+          'Tsinghua Institute for AI Industry Research (AIR)',
+        ],
+      },
+      zh: {
+        scholars: [
+          { name: 'Yunxin Liu / 刘云新', titles: 'IEEE Fellow, 清华 AIR 副院长, 原 MSRA' },
+          { name: 'Guihai Chen / 陈贵海', titles: 'IEEE Fellow, CCF Fellow, 国家杰青' },
+          { name: 'Haipeng Dai / 戴海鹏', titles: '教育部青年长江学者, IET Fellow' },
+        ],
+        institutions: [
+          '南京大学 — 计算机科学国家重点实验室, CSRankings 中国 Top-5',
+          '清华大学智能产业研究院 (AIR)',
+        ],
+      },
+    },
   },
   {
     num: 3,
@@ -31,9 +94,13 @@ const citations = [
     venue: 'MMSys',
     year: 2025,
     rank: 'A',
-    context: '"Commodity cameras...are typically not programmable [49] and thus not suitable for...DAG construction."',
-    sentiment: '一般引用' as const,
-    reasoning: '§6.1 中作为背景事实引用，无褒贬。',
+    context:
+      '"Commodity cameras...are typically not programmable [49] and thus not suitable for...DAG construction."',
+    sentimentKey: 'neutral',
+    reasoning: {
+      en: 'Factual background in §6.1; no evaluative language.',
+      zh: '§6.1 中作为背景事实引用，无褒贬。',
+    },
   },
   {
     num: 4,
@@ -44,8 +111,11 @@ const citations = [
     year: 2025,
     rank: 'A',
     context: '"Some works reduce model computation by minimizing certain input regions [29], [30], [31]."',
-    sentiment: '一般引用' as const,
-    reasoning: 'Related Work 中以列举方式归类为输入区域优化工作。',
+    sentimentKey: 'neutral',
+    reasoning: {
+      en: 'Listed in Related Work as input-region optimization.',
+      zh: 'Related Work 中以列举方式归类为输入区域优化工作。',
+    },
   },
   {
     num: 5,
@@ -56,16 +126,19 @@ const citations = [
     year: 2024,
     rank: 'A',
     context: '"...experiences a surge in frequency when more objects are detected [16], [17]."',
-    sentiment: '一般引用' as const,
-    reasoning: 'Introduction 中作为 IoT 推理任务的示例引用。',
+    sentimentKey: 'neutral',
+    reasoning: {
+      en: 'Example IoT inference workload in the Introduction.',
+      zh: 'Introduction 中作为 IoT 推理任务的示例引用。',
+    },
   },
 ];
 
-const sentimentStyle = {
-  '高度评价': 'bg-green-50 text-green-700 ring-green-200',
-  '一般引用': 'bg-blue-50 text-blue-700 ring-blue-200',
-  '批评性引用': 'bg-red-50 text-red-700 ring-red-200',
-} as const;
+const sentimentStyle: Record<SentimentKey, string> = {
+  high: 'bg-green-50 text-green-700 ring-green-200',
+  neutral: 'bg-blue-50 text-blue-700 ring-blue-200',
+  critical: 'bg-red-50 text-red-700 ring-red-200',
+};
 
 const rankStyle: Record<string, string> = {
   A: 'bg-red-50 text-red-600 ring-red-200',
@@ -73,107 +146,169 @@ const rankStyle: Record<string, string> = {
   C: 'bg-gray-50 text-gray-600 ring-gray-200',
 };
 
+function sentimentLabel(key: SentimentKey, t: { sentiment: { high: string; neutral: string; critical: string } }) {
+  return t.sentiment[key];
+}
+
 export default function SampleReport() {
+  const { locale, t } = useLocale();
+  const s = t.sampleReport;
+
   return (
     <section className="py-20">
       <div className="max-w-6xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-3">Example Output</h2>
+        <h2 className="text-3xl font-bold text-center mb-3">{s.sectionTitle}</h2>
         <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
-          Real report generated by analyzing{' '}
+          {s.subtitleBeforeLink}{' '}
           <a
             href="https://doi.org/10.1145/3603269.3604825"
             target="_blank"
             rel="noreferrer"
             className="text-primary-600 underline hover:text-primary-700"
           >
-            PacketGame (SIGCOMM 2023)
+            {s.linkPacketGame}
           </a>
-          . The agent extracts citation contexts from PDFs, identifies institutions, and classifies each citation automatically.
+          {s.subtitleAfterLink}
         </p>
 
         <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Report header */}
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-              <h3 className="font-bold text-lg text-gray-900">学术论文被引情况报告</h3>
-              <span className="text-sm text-gray-500">研究者: Mu Yuan (袁牧)</span>
-              <span className="text-sm text-gray-500">分析论文: 1 篇</span>
-              <span className="text-sm text-gray-500">符合条件被引: 5 次</span>
+              <h3 className="font-bold text-lg text-gray-900">{s.reportTitle}</h3>
+              <span className="text-sm text-gray-500">{s.metaResearcher}</span>
+              <span className="text-sm text-gray-500">{s.metaPapers}</span>
+              <span className="text-sm text-gray-500">{s.metaCitations}</span>
             </div>
           </div>
 
-          {/* Target paper */}
           <div className="px-6 py-4 border-b border-gray-100 bg-white">
-            <p className="font-semibold text-gray-800">
-              PacketGame: Multi-stream packet gating for concurrent video inference at scale
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              ACM SIGCOMM 2023 &nbsp;·&nbsp; DOI: 10.1145/3603269.3604825
-            </p>
+            <p className="font-semibold text-gray-800">{s.targetTitle}</p>
+            <p className="text-sm text-gray-500 mt-1">{s.targetMeta}</p>
           </div>
 
-          {/* Citation table */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left text-gray-600">
-                  <th className="px-4 py-3 font-semibold w-8">#</th>
-                  <th className="px-4 py-3 font-semibold">他引论文</th>
-                  <th className="px-4 py-3 font-semibold">机构</th>
-                  <th className="px-4 py-3 font-semibold">发表出处</th>
-                  <th className="px-4 py-3 font-semibold w-12">年份</th>
-                  <th className="px-4 py-3 font-semibold w-12">评级</th>
-                  <th className="px-4 py-3 font-semibold min-w-[220px]">引用原文</th>
-                  <th className="px-4 py-3 font-semibold w-20">评价类型</th>
-                  <th className="px-4 py-3 font-semibold min-w-[180px]">分析说明</th>
+                  <th className="px-4 py-3 font-semibold w-8">{s.table.num}</th>
+                  <th className="px-4 py-3 font-semibold">{s.table.citingPaper}</th>
+                  <th className="px-4 py-3 font-semibold">{s.table.institution}</th>
+                  <th className="px-4 py-3 font-semibold">{s.table.venue}</th>
+                  <th className="px-4 py-3 font-semibold w-12">{s.table.year}</th>
+                  <th className="px-4 py-3 font-semibold w-12">{s.table.rank}</th>
+                  <th className="px-4 py-3 font-semibold min-w-[220px]">{s.table.context}</th>
+                  <th className="px-4 py-3 font-semibold w-24">{s.table.sentiment}</th>
+                  <th className="px-4 py-3 font-semibold min-w-[180px]">{s.table.analysis}</th>
                 </tr>
               </thead>
               <tbody>
-                {citations.map((c) => (
-                  <tr key={c.num} className="border-t border-gray-100 align-top">
-                    <td className="px-4 py-3 text-gray-400">{c.num}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">
-                      {c.title.length > 60 ? c.title.slice(0, 60) + '...' : c.title}
-                      <br />
-                      <span className="text-xs text-gray-400">{c.authors}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{c.institution}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.venue}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.year}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 text-xs font-bold rounded ring-1 ${rankStyle[c.rank] || ''}`}>
-                        {c.rank}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 leading-relaxed">
-                      <span className="italic text-xs">{c.context}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ring-1 ${sentimentStyle[c.sentiment]}`}>
-                        {c.sentiment}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs leading-relaxed">{c.reasoning}</td>
-                  </tr>
-                ))}
+                {citations.map((c) => {
+                  const detail = c.highPraiseDetail?.[locale];
+                  const reasoning = c.reasoning[locale];
+                  const label = sentimentLabel(c.sentimentKey, s);
+                  const isHigh = c.sentimentKey === 'high';
+                  return (
+                    <Fragment key={c.num}>
+                      <tr
+                        className={`border-t align-top ${isHigh ? 'border-green-200 bg-green-50/40' : 'border-gray-100'}`}
+                      >
+                        <td className="px-4 py-3 text-gray-400">{c.num}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">
+                          {c.title.length > 60 ? c.title.slice(0, 60) + '...' : c.title}
+                          <br />
+                          <span className="text-xs text-gray-400">{c.authors}</span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">{c.institution}</td>
+                        <td className="px-4 py-3 text-gray-600">{c.venue}</td>
+                        <td className="px-4 py-3 text-gray-600">{c.year}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block px-2 py-0.5 text-xs font-bold rounded ring-1 ${rankStyle[c.rank] || ''}`}
+                          >
+                            {c.rank}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 leading-relaxed">
+                          <span className="italic text-xs">{c.context}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ring-1 ${sentimentStyle[c.sentimentKey]}`}
+                          >
+                            {label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs leading-relaxed">{reasoning}</td>
+                      </tr>
+                      {detail && (
+                        <tr className="bg-gradient-to-r from-green-50 to-emerald-50/50">
+                          <td colSpan={9} className="px-4 py-0">
+                            <div className="mx-4 my-3 rounded-lg border border-green-200 bg-white/80 shadow-sm px-5 py-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-green-600 text-base">★</span>
+                                <span className="text-sm font-bold text-green-800">{s.highPraiseCard}</span>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    {s.notableAuthors}
+                                  </p>
+                                  <ul className="space-y-1.5">
+                                    {detail.scholars.map((sch) => (
+                                      <li key={sch.name} className="text-sm text-gray-700">
+                                        <span className="font-semibold text-gray-900">{sch.name}</span>
+                                        <br />
+                                        <span className="text-xs text-gray-500">{sch.titles}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    {s.topInstitutions}
+                                  </p>
+                                  <ul className="space-y-1.5">
+                                    {detail.institutions.map((inst, idx) => (
+                                      <li key={idx} className="text-sm text-gray-700">
+                                        {inst}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          {/* Summary bar */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-400" />
-              <span className="text-gray-600">高度评价: 1 (20%)</span>
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-400" />
+                <span className="text-gray-600">
+                  {s.summary.high} 1 (20%)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-blue-400" />
+                <span className="text-gray-600">
+                  {s.summary.neutral} 4 (80%)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-orange-400" />
+                <span className="text-gray-600">
+                  {s.summary.critical} 0
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-blue-400" />
-              <span className="text-gray-600">一般引用: 4 (80%)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-orange-400" />
-              <span className="text-gray-600">批评性引用: 0</span>
-            </div>
+            <p className="mt-2 text-xs text-gray-500">{s.summary.footnote}</p>
           </div>
         </div>
 
@@ -184,7 +319,7 @@ export default function SampleReport() {
             rel="noreferrer"
             className="underline hover:text-gray-600"
           >
-            View full report on GitHub &rarr;
+            {s.viewFull}
           </a>
         </p>
       </div>
